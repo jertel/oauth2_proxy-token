@@ -60,18 +60,25 @@ func hash(password string) string {
 func createOrUpdateToken(config *Config, user string, uri string) (string, error) {
 	response := ""
 	tokens, err := readTokensFromFile(config.PasswdFilename)
+	msg1 := ""
+	msg2 := ""
+	msg3 := ""
 	if err == nil {
 		t := tokens[user]
 		if t == nil || strings.HasSuffix(uri, "?new") {
 			t, err = generateToken(config.TokenByteLength)
 			if err == nil {
-				response = fmt.Sprintf("Your new Basic HTTP Auth credentials have been generated.\n\nUser: %s\nPassword: %s\n\nNote: It can take a few minutes for the new token to synchronize with the SSO proxy.", user, t.secret)
+				msg1 = fmt.Sprintf("Your new Basic HTTP Auth credentials have been generated.")
+				msg2 = fmt.Sprintf("User: %s", user)
+				msg3 = fmt.Sprintf("Password: %s", t.secret)
 				t.secret = hash(t.secret)
 				log.WithField("user", user).Info("Generated token")
 			}
 		} else {
-			response = fmt.Sprintf("Refreshed existing token for user '%s'.\n\nNavigate to /?new to generate a new token.", user)
+			msg1 = fmt.Sprintf("Refreshed existing token for user '%s'.", user)
+			msg2 = "Navigate to /?new to generate a new token."
 		}
+		response = fmt.Sprintf("<html><head><title>SSO Token</title> <meta http-equiv=\"refresh\" content=\"1800;URL='/'\"></head><body>%s<p>%s<p>%s<p>Note: It can take a few minutes for the new token to synchronize with the SSO proxy.</body></html>", msg1, msg2, msg3)
 		if err == nil {
 			t.renew(config.TokenValidityHours)
 			tokens[user] = t

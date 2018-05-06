@@ -54,6 +54,9 @@ func main() {
 			}
 			user := convertUser(r.Header.Get(config.HeaderUsername))
 			uri := r.Header.Get(config.HeaderURI)
+			if uri == "" {
+				uri = r.RequestURI
+			}
 			mutex.Lock()
 			t, err := createOrUpdateToken(config, user, uri)
 			mutex.Unlock()
